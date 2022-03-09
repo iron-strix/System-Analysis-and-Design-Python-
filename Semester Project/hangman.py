@@ -4,9 +4,11 @@
 #hangman test
 
 import random
+import os
+import time
 
 #define where the words file is
-WORDLIST_FILE = "words.txt"
+WORDLIST_FILE = "engmix_removed.txt"
 
 #create a global guessedList variable for functions to use
 guessedList = []
@@ -25,7 +27,6 @@ def loadWordFile():
     wordlist.sort(key=len)
 
     print("  ", len(wordlist), "words loaded.")
-    
     return wordlist
 
 #have user choose difficulty, returns int
@@ -49,7 +50,6 @@ def chooseWord(difficulty, wordlist):
                 easylist.append(item[0])
         #easylist = [x for x in wordlist if (len(str(x)) < 7)]
         #easylist[:] = [x for x in easylist if (len(str(x)) < 2)]
-
         #easylist = list(filter(lambda x : ((len(str(x)) < 7) and (len(str(x)) > 2)), wordlist))
         print("  ", len(easylist), "words loaded.")
         return random.choice(easylist)
@@ -73,10 +73,12 @@ def chooseWord(difficulty, wordlist):
 #check if guessed character is in word
 def checkSecretWord(secretWord, guess):
     if secretWord != None and guess in secretWord:
-        #print(f"{guess} found in {secretWord}")
+        print(f"{guess} found in the word!")
+        time.sleep(1)
         return True
     else:
         print(f"{guess} is NOT in the word.")
+        time.sleep(1)
         return False
 
 #check if character guessed is in list
@@ -111,6 +113,8 @@ def clearGuessedList():
 #display for user
 def display(secretWord, lives):
     global guessedList
+
+    os.system('cls' if os.name == 'nt' else 'clear')
 
     for char in str(secretWord):
         if char in guessedList:
@@ -159,11 +163,12 @@ def score(secretWord, lives):
     for item in scoreDict:
         if item in secretWord:
             score += scoreDict[item]
+
     return score*lives
 
 #main game logic 
 def playHangman(secretWord):
-    lives = 5
+    lives = 7
 
     while lives > 0 and not checkWinner(secretWord):
         display(secretWord, lives)

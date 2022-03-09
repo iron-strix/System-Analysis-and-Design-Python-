@@ -125,7 +125,7 @@ def display(secretWord, lives):
     print("\n")
 
 #calculate score
-def score(secretWord):
+def score(secretWord, lives):
     score = 0
     scoreDict = {
         'e' : 10,
@@ -159,7 +159,7 @@ def score(secretWord):
     for item in scoreDict:
         if item in secretWord:
             score += scoreDict[item]
-    return score
+    return score*lives
 
 #main game logic 
 def playHangman(secretWord):
@@ -178,7 +178,7 @@ def playHangman(secretWord):
     display(secretWord, lives)
 
     if checkWinner(secretWord):
-        print(f"\nCongrats, you win! Here's your score: {score(secretWord)}")
+        print(f"\nCongrats, you win! Here's your score: {score(secretWord, lives)}")
     else:
         print(f"\nSorry, the word was {secretWord.upper()}. Better luck next time!")
     

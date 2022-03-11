@@ -6,12 +6,17 @@
 import random
 import os
 import time
+from urllib.request import urlopen
+import re
 
 #define where the words file is
 WORDLIST_FILE = "engmix_removed.txt"
 
 #create a global guessedList variable for functions to use
 guessedList = []
+
+#create a global difficulty
+DIFFICULTY = 0
 
 #load the words from file
 def loadWordFile():
@@ -36,12 +41,13 @@ def chooseDifficulty():
     print(f"2. Medium - Words are 9 characters or less. No hints are given.")
     print(f"3. Hard - Words are 12 characters or less. No hints are given.")
     difficulty = input()
+    global DIFFICULTY 
+    DIFFICULTY = int(difficulty)
     return int(difficulty)
 
 #choose a word at random based on difficulty from wordlist
 def chooseWord(difficulty, wordlist):
-    
-    print(f"difficulty chosen was {difficulty}")
+    #print(f"difficulty chosen was {difficulty}")
 
     if int(difficulty) == 1:
         easylist = []
@@ -69,6 +75,36 @@ def chooseWord(difficulty, wordlist):
                 hardlist.append(item[0])
         print("  ", len(hardlist), "words loaded.")
         return random.choice(hardlist)
+
+#web scraping
+#search
+def scrape(secretWord):
+    url = 'https://www.dictionary.com/browse/'
+    term = secretWord.casefold()
+    url += term
+    print(f"Searching {url} ...")
+
+    page = urlopen(url)
+
+    html_bytes = page.read()
+    html = html_bytes.decode("utf-8")
+
+    pattern = "<div class=\"default-content\">.*?<span class=\"luna-example"
+
+    match_results = re.search(pattern, html, re.IGNORECASE)
+
+    result = match_results.group()
+    result = re.sub("<.*?>", "", result) #remove HTML tags
+    result = result.replace("<span class=\"luna-example", "", 1)
+    return str(result)
+    
+    try:
+        result = match_results.group()
+        result = re.sub("<.*?>", "", result) #remove HTML tags
+        result = result.replace("<span class=\"luna-example", "", 1)
+        return str(result)
+    except AttributeError:
+        print("Couldn't find a hint! Sorry.")
 
 #check if guessed character is in word
 def checkSecretWord(secretWord, guess):
@@ -168,26 +204,51 @@ def score(secretWord, lives):
 
 #main game logic 
 def playHangman(secretWord):
+    global DIFFICULTY
     lives = 7
 
-    while lives > 0 and not checkWinner(secretWord):
+    print(DIFFICULTY)
+    input()
+
+    if DIFFICULTY == 1:
+        while lives > 0 and not checkWinner(secretWord):
+            display(secretWord, lives)
+            print(f"HINT: {scrape(secretWord)}")
+            guess = input("Make a guess: ")[0]
+            addGuessedList(guess)
+
+            if not checkSecretWord(secretWord, guess) and checkGuessedList(guess):
+                #print("Subtracting 1 life.")
+                lives -= 1
+
         display(secretWord, lives)
 
-        guess = input("Make a guess: ")[0]
-        addGuessedList(guess)
+        if checkWinner(secretWord):
+            print(f"\nCongrats, you win! Here's your score: {score(secretWord, lives)}")
+        else:
+            print(f"\nSorry, the word was {secretWord.upper()}. Better luck next time!")
+        
+        clearGuessedList()
 
-        if not checkSecretWord(secretWord, guess) and checkGuessedList(guess):
-            #print("Subtracting 1 life.")
-            lives -= 1
-
-    display(secretWord, lives)
-
-    if checkWinner(secretWord):
-        print(f"\nCongrats, you win! Here's your score: {score(secretWord, lives)}")
     else:
-        print(f"\nSorry, the word was {secretWord.upper()}. Better luck next time!")
-    
-    clearGuessedList()
+        while lives > 0 and not checkWinner(secretWord):
+            display(secretWord, lives)
+
+            guess = input("Make a guess: ")[0]
+            addGuessedList(guess)
+
+            if not checkSecretWord(secretWord, guess) and checkGuessedList(guess):
+                #print("Subtracting 1 life.")
+                lives -= 1
+
+        display(secretWord, lives)
+
+        if checkWinner(secretWord):
+            print(f"\nCongrats, you win! Here's your score: {score(secretWord, lives)}")
+        else:
+            print(f"\nSorry, the word was {secretWord.upper()}. Better luck next time!")
+        
+        clearGuessedList()
 
 def main():
     playing = True

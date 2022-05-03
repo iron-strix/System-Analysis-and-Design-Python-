@@ -93,6 +93,9 @@ def scrape(secretWord):
 
     match_results = re.search(pattern, html, re.IGNORECASE)
 
+    # ISSUES WITH ERRORS BEING THROWN
+    # HTML LAYOUT IS DIFFERENT FROM PAGE TO PAGE
+    # MAY NEED MULTIPLE REGEX TRY/CATCH BLOCKS
     result = match_results.group()
     result = re.sub("<.*?>", "", result) #remove HTML tags
     result = result.replace("<span class=\"luna-example", "", 1)

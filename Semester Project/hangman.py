@@ -8,7 +8,6 @@ import os
 import time
 from urllib.request import urlopen
 import re
-import time
 
 #define where the words file is
 WORDLIST_FILE = "engmix_removed.txt"

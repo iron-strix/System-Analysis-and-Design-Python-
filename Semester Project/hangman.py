@@ -8,6 +8,7 @@ import os
 import time
 from urllib.request import urlopen
 import re
+import time
 
 #define where the words file is
 WORDLIST_FILE = "engmix_removed.txt"
@@ -31,7 +32,7 @@ def loadWordFile():
 
     wordlist.sort(key=len)
 
-    print("  ", len(wordlist), "words loaded.")
+    #print("  ", len(wordlist), "words loaded.")
     return wordlist
 
 #have user choose difficulty, returns int
@@ -49,6 +50,12 @@ def chooseDifficulty():
 def chooseWord(difficulty, wordlist):
     #print(f"difficulty chosen was {difficulty}")
 
+    #DEBUG
+    cheatMode = False
+
+    if cheatMode:
+        return input("CHEAT MODE ENABLED\nPlease input your own word: ")
+
     if int(difficulty) == 1:
         easylist = []
         for item in wordlist:
@@ -57,7 +64,7 @@ def chooseWord(difficulty, wordlist):
         #easylist = [x for x in wordlist if (len(str(x)) < 7)]
         #easylist[:] = [x for x in easylist if (len(str(x)) < 2)]
         #easylist = list(filter(lambda x : ((len(str(x)) < 7) and (len(str(x)) > 2)), wordlist))
-        print("  ", len(easylist), "words loaded.")
+        #print("  ", len(easylist), "words loaded.")
         return random.choice(easylist)
 
     elif int(difficulty) == 2:
@@ -65,7 +72,7 @@ def chooseWord(difficulty, wordlist):
         for item in wordlist:
             if len(item[0]) <= 9 and len(item[0]) > 2:
                 mediumlist.append(item[0])
-        print("  ", len(mediumlist), "words loaded.")
+        #print("  ", len(mediumlist), "words loaded.")
         return random.choice(mediumlist)
 
     else:
@@ -73,41 +80,92 @@ def chooseWord(difficulty, wordlist):
         for item in wordlist:
             if len(item[0]) <= 12 and len(item[0]) > 5:
                 hardlist.append(item[0])
-        print("  ", len(hardlist), "words loaded.")
+        #print("  ", len(hardlist), "words loaded.")
         return random.choice(hardlist)
 
 #web scraping
 #search
-def scrape(secretWord):
-    url = 'https://www.dictionary.com/browse/'
-    term = secretWord.casefold()
-    url += term
-    print(f"Searching {url} ...")
+def scrape(secretWord):  
+    try:
+        url = 'https://www.dictionary.com/browse/'
+        term = secretWord.casefold()
+        url += term
+        #print(f"Searching {url} ...") #debug
 
-    page = urlopen(url)
+        page = urlopen(url)
 
-    html_bytes = page.read()
-    html = html_bytes.decode("utf-8")
+        html_bytes = page.read()
+        html = html_bytes.decode("utf-8")
 
-    pattern = "<div class=\"default-content\">.*?<span class=\"luna-example"
+        #match_results = re.search(pattern, html, re.IGNORECASE)
+        #result = match_results.group()
+        #result = re.sub("<.*?>", "", result) #remove HTML tags
+        #result = result.replace("<span class=\"luna-example", "", 1)
+        #return str(result)
+    
+        #pattern 3
+        try:
+            pattern = "value=\"1\".*?</div>"
+            match_results = re.search(pattern, html, re.IGNORECASE)
+            #print(match_results)
+            result = match_results.group()
+            #print(result) #debug
+            pattern2 = "<span class=\"luna-example"
+            
+            #check to remove useage of word, can spoil the secretWord
+            if pattern2 in result:
+                result = re.sub("<span class=\"luna-example.*?</span>", "", result)
+            
+            result = re.sub("<.*?>", "", result) #remove HTML tags
+            
+            result = re.sub("value=\"1\"","", result) #remove value=1
+            result = re.sub("class=.*?>", "", result)
+            result = result.replace(":", "", -1)
+            return str(result)
+        except AttributeError as e:
+            print("Pattern 3 failed.")
+            print(e)
+            #print(match_results)
 
-    match_results = re.search(pattern, html, re.IGNORECASE)
+        #pattern 1
+        try:
+            pattern = "<div class=\"default-content\">.*?<span class=\"luna-example"
+            match_results = re.search(pattern, html, re.IGNORECASE)
+            result = match_results.group()
+            result = re.sub("<.*?>", "", result) #remove HTML tags
+            result = result.replace("<span class=\"luna-example", "", 1)
+            return str(result)
+        except AttributeError as e:
+            print("Pattern 1 failed.")
+            print(e)
+            #print(match_results)
+
+        #pattern 2
+        try:
+            pattern = "<section id=\"top-definitions-section\".*?value=\"2\""
+            match_results = re.search(pattern, html, re.IGNORECASE)
+            result = match_results.group()
+            result = re.sub("<.*?>", "", result) #remove HTML tags
+            result = result.replace(":", "", -1)
+            return str(result)
+        except AttributeError as e:
+            print("Pattern 2 failed.")
+            print(e)
+            #print(match_results)
 
     # ISSUES WITH ERRORS BEING THROWN
     # HTML LAYOUT IS DIFFERENT FROM PAGE TO PAGE
     # MAY NEED MULTIPLE REGEX TRY/CATCH BLOCKS
-    result = match_results.group()
-    result = re.sub("<.*?>", "", result) #remove HTML tags
-    result = result.replace("<span class=\"luna-example", "", 1)
-    return str(result)
-    
-    try:
-        result = match_results.group()
-        result = re.sub("<.*?>", "", result) #remove HTML tags
-        result = result.replace("<span class=\"luna-example", "", 1)
-        return str(result)
-    except AttributeError:
-        print("Couldn't find a hint! Sorry.")
+    except Exception as e:
+        print("Hint URL failed!")
+        print (e)
+
+        print("\n\nRestarting the game with a new word...")
+        #wait a few seconds to restart
+
+        time.sleep(5)
+        secretword = chooseWord(chooseDifficulty(), loadWordFile())
+        playHangman(secretword)
 
 #check if guessed character is in word
 def checkSecretWord(secretWord, guess):
@@ -124,7 +182,7 @@ def checkSecretWord(secretWord, guess):
 def checkGuessedList(guess):
     global guessedList
     for item in guessedList:
-        if item[0] == guess:
+        if item == guess:
             #print(f"{guess} has already been guessed!")
             return True
     return False
@@ -210,13 +268,14 @@ def playHangman(secretWord):
     global DIFFICULTY
     lives = 7
 
-    print(DIFFICULTY)
-    input()
+    #print(DIFFICULTY) #debug
+    #input() #debug
 
     if DIFFICULTY == 1:
+        hint = scrape(secretWord)
         while lives > 0 and not checkWinner(secretWord):
             display(secretWord, lives)
-            print(f"HINT: {scrape(secretWord)}")
+            print(f"HINT: {hint}")
             guess = input("Make a guess: ")[0]
             addGuessedList(guess)
 
@@ -257,6 +316,7 @@ def main():
     playing = True
     while playing:
         secretWord = chooseWord(chooseDifficulty(), loadWordFile())
+        #secretWord = input("DEBUG: Input secret word. Please disable this feature to actually play a game.")
         #print(f"I'm cheating. secretWord is {secretWord}")
         playHangman(secretWord)
         

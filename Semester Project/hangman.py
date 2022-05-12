@@ -91,7 +91,8 @@ def scrape(secretWord):
         url += term
         #print(f"Searching {url} ...") #debug
 
-        page = urlopen(url)
+        #attempt to open url, will time out after 5 seconds
+        page = urlopen(url, None, 5)
 
         html_bytes = page.read()
         html = html_bytes.decode("utf-8")
@@ -211,6 +212,78 @@ def display(secretWord, lives):
     global guessedList
 
     os.system('cls' if os.name == 'nt' else 'clear')
+
+    if (lives == 7):
+            print("_________")
+            print("|	 |")
+            print("|")
+            print("|")
+            print("|")
+            print("|")
+            print("|________")
+
+    elif (lives == 6):
+            print("_________")
+            print("|	 |")
+            print("|	 O")
+            print("|")
+            print("|")
+            print("|")
+            print("|________")
+    
+    elif (lives == 5):
+            print("_________")
+            print("|	 |")
+            print("|	 O")
+            print("|	 |")
+            print("|")
+            print("|")
+            print("|________")
+    
+    elif (lives == 4):
+            print("_________")
+            print("|	 |")
+            print("|	 O")
+            print("|	 |")
+            print("|	 |")
+            print("|")
+            print("|________")
+    
+    elif (lives == 3):
+            print("_________")
+            print("|	 |")
+            print("|	 O")
+            print("|	\|")
+            print("|	 |")
+            print("|")
+            print("|________")
+    
+    elif (lives == 2):
+            print("_________")
+            print("|	 |")
+            print("|	 O")
+            print("|	\|/")
+            print("|	 |")
+            print("|")
+            print("|________")
+    
+    elif (lives == 1):
+            print("_________")
+            print("|	 |")
+            print("|	 O")
+            print("|	\|/")
+            print("|	 |")
+            print("|	/")
+            print("|________")
+    
+    elif (lives == 0):
+        print("_________")
+        print("|	 |")
+        print("|	 O")
+        print("|	\|/")
+        print("|	 |")
+        print("|	/ \ ")
+        print("|________")
 
     for char in str(secretWord):
         if char in guessedList:

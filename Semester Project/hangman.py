@@ -245,8 +245,12 @@ def clearGuessedList():
 def display(secretWord, lives):
     global guessedList
 
+    #first, clear the screen
     os.system('cls' if os.name == 'nt' else 'clear')
 
+    #check for which ascii art to display
+    #this is relative to how many lives are
+    #remaining for the player
     if (lives == 7):
             print("_________")
             print("|	 |")
@@ -319,13 +323,19 @@ def display(secretWord, lives):
         print("|	/ \ ")
         print("|________")
 
+    #display which characters are correctly guessed in the word
+    #otherwise, display "_", eg beach could be "b _ _ c h" if
+    #"e" and "a" have not been guessed
     for char in str(secretWord):
         if char in guessedList:
             print(f"{char} ", end ='')
         else:
             print("_ ", end ='')
+    
+    #numerical number of lives remaining
     print(f"\t{lives} guesses remaining.")
 
+    #display characters already guessed
     print("\nGuessed characters: ", end='')
     for item in guessedList:
         print(f"{item[0]} ", end='')
@@ -365,6 +375,7 @@ def score(secretWord, lives):
         'z' : 200
     }
     
+    #sum the characters to provide scoring
     for item in scoreDict:
         if item in secretWord:
             score += scoreDict[item]
